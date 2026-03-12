@@ -1,93 +1,72 @@
 import streamlit as st
-import json
 import pandas as pd
+import json
 import os
 
-st.title("🧠 Sapio: The Agentic GDP Terminal")
+# --- 1. SAPIO CONFIGURATION ---
+st.set_page_config(
+    page_title="Sapio Terminal | AI-Crypto Intelligence", 
+    page_icon="🧠",
+    layout="wide"
+)
 
-# This is the EXACT path to your data
-# This tells the app to look in the SAME FOLDER where app.py is sitting
+# CRITICAL: We use a relative path so it works on your Mac AND in the Cloud
 JSON_PATH = "Agentic_GDP_Live_Feed.json"
 
-# --- 2. THE HEADER ---
-st.subheader("Institutional Intelligence for the Solana AI Ecosystem")
+# --- 2. HEADER & BRANDING ---
+st.title("🧠 Sapio: The Agentic GDP Terminal")
+st.subheader("Institutional Intelligence for Solana, XRPL, & NEAR")
 st.markdown("---")
 
-# --- 3. THE DATA ENGINE ---
+# --- 3. DATA ENGINE ---
+# This block safely checks for your data and displays it
 if os.path.exists(JSON_PATH):
     try:
         with open(JSON_PATH, "r") as f:
             data = json.load(f)
         
-        # Display High-Level Metrics
-        col1, col2, col3 = st.columns(3)
+        # Main Metric (The 'North Star' of the project)
+        st.metric(
+            label="Total Ecosystem Agentic GDP", 
+            value=data.get("global_aGDP_estimate", "N/A"), 
+            delta="+$1.6B (7d)"
+        )
         
-        # Handling the data from your specific JSON structure
-        global_gdp = data.get("global_aGDP_estimate", "$0")
-        
-        col1.metric("Global aGDP Estimate", global_gdp, "+12.5% (24h)")
-        col2.metric("Network Status", "Institutional Grade", delta_color="normal")
-        col3.metric("Terminal Status", "LIVE / ENCRYPTED")
+        st.write("### 🌐 Cross-Chain Liquidity Flow")
+        # Create a clean table for the different chains
+        if "chains" in data:
+            df_chains = pd.DataFrame(data["chains"])
+            st.dataframe(df_chains, use_container_width=True, hide_index=True)
 
-        st.markdown("### 💎 High-Signal Project Flow")
-        st.write("Current projects hitting the 99th percentile for SVM momentum:")
-        
-        # Convert the list of projects to a clean table
-        df = pd.DataFrame(data.get("top_movers", []))
-        st.table(df)
+        st.write("### 💎 High-Signal Project Flow")
+        # Show specific AI agents moving the most volume
+        if "top_movers" in data:
+            df_movers = pd.DataFrame(data["top_movers"])
+            st.table(df_movers)
 
-        st.success("✅ REAL-TIME CONNECTION ESTABLISHED")
+        st.success("✅ SAPIO INTELLIGENCE ONLINE: Multi-Chain Feed Active.")
 
     except Exception as e:
-        st.error(f"Error parsing JSON: {e}")
+        st.error(f"Sync Error: {e}")
+        st.info("Ensure the scraper has generated a valid JSON file.")
 else:
-    st.error(f"❌ CRITICAL ERROR: File not found at {JSON_PATH}")
-    st.info("Founder Check: Ensure 'Agentic_GDP_Live_Feed.json' is sitting in your Documents folder.")
+    # This shows if the file is missing from the folder
+    st.warning("🔄 Waiting for Sapio Scraper to feed live data...")
+    st.info(f"Looking for file: {JSON_PATH}")
 
-# --- 4. THE REVENUE HOOK (SIDEBAR) ---
-st.sidebar.header("🔒 Tier-1 Angel Syndicate")
-st.sidebar.write("Access pre-seed rounds for vetted AI-Crypto infrastructure.")
-lead_email = st.sidebar.text_input("Enter Email for Private Deal Flow")
+# --- 4. THE SAPIO SIDEBAR ---
+with st.sidebar:
+    st.header("🧠 Sapio Intelligence")
+    st.write("Vetting the next generation of autonomous infrastructure on SVM and XRPL.")
+    st.markdown("---")
+    
+    lead_email = st.text_input("Enter Email for Private Deal Flow")
+    if st.button("Request Access"):
+        if lead_email:
+            st.success(f"Sapio Application sent for {lead_email}")
+            st.balloons()
+        else:
+            st.error("Please enter a valid email.")
 
-if st.sidebar.button("Request Access"):
-    if lead_email:
-        st.sidebar.success(f"Application sent for {lead_email}")
-        st.balloons()
-    else:
-        st.sidebar.warning("Please enter an email.")
-
-# --- 5. THE PITCH FOOTER ---
-st.markdown("---")
-st.caption("Proprietary Intelligence by Aetheria Labs. 2026. All Rights Reserved.")
-# Change the title and sidebar
-st.set_page_config(page_title="Sapio Terminal | AI-Crypto Intelligence", layout="wide")
-
-st.title("🧠 Sapio: The Agentic GDP Terminal")
-st.subheader("Institutional Intelligence for the Solana AI Ecosystem")
-
-# Change the footer at the bottom
-st.caption("Proprietary Intelligence by Sapio Labs. 2026. All Rights Reserved.")
-import json
-import time
-
-# NEW: Multi-Chain Sapio Data
-report = {
-    "timestamp": time.time(),
-    "global_aGDP_estimate": "$5.8 Billion",
-    "chains": [
-        {"chain": "Solana", "aGDP": "$4.2B", "growth": "+12%", "status": "High Activity"},
-        {"chain": "XRP Ledger", "aGDP": "$420M", "growth": "+5%", "status": "Emerging"},
-        {"chain": "NEAR", "aGDP": "$1.1B", "growth": "+22%", "status": "Accelerating"}
-    ],
-    "top_movers": [
-        {"name": "Sentient-Trader", "chain": "Solana", "daily_volume": "$890k"},
-        {"name": "Ripple-Settler-AI", "chain": "XRPL", "daily_volume": "$120k"},
-        {"name": "Near-Neural-Node", "chain": "NEAR", "daily_volume": "$450k"}
-    ]
-}
-
-# Save to your Documents folder
-with open("/Users/birpratapsingh/Documents/Agentic_GDP_Live_Feed.json", "w") as f:
-    json.dump(report, f, indent=4)
-
-print("Sapio Intelligence: Multi-Chain Data Updated.")
+    st.markdown("---")
+    st.caption("Proprietary Intelligence by Sapio Labs. 2026.")
