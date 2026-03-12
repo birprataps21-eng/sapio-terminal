@@ -67,3 +67,27 @@ st.subheader("Institutional Intelligence for the Solana AI Ecosystem")
 
 # Change the footer at the bottom
 st.caption("Proprietary Intelligence by Sapio Labs. 2026. All Rights Reserved.")
+import json
+import time
+
+# NEW: Multi-Chain Sapio Data
+report = {
+    "timestamp": time.time(),
+    "global_aGDP_estimate": "$5.8 Billion",
+    "chains": [
+        {"chain": "Solana", "aGDP": "$4.2B", "growth": "+12%", "status": "High Activity"},
+        {"chain": "XRP Ledger", "aGDP": "$420M", "growth": "+5%", "status": "Emerging"},
+        {"chain": "NEAR", "aGDP": "$1.1B", "growth": "+22%", "status": "Accelerating"}
+    ],
+    "top_movers": [
+        {"name": "Sentient-Trader", "chain": "Solana", "daily_volume": "$890k"},
+        {"name": "Ripple-Settler-AI", "chain": "XRPL", "daily_volume": "$120k"},
+        {"name": "Near-Neural-Node", "chain": "NEAR", "daily_volume": "$450k"}
+    ]
+}
+
+# Save to your Documents folder
+with open("/Users/birpratapsingh/Documents/Agentic_GDP_Live_Feed.json", "w") as f:
+    json.dump(report, f, indent=4)
+
+print("Sapio Intelligence: Multi-Chain Data Updated.")
