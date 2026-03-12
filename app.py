@@ -6,7 +6,8 @@ import os
 st.title("🧠 Sapio: The Agentic GDP Terminal")
 
 # This is the EXACT path to your data
-JSON_PATH = "/Users/birpratapsingh/Documents/Agentic_GDP_Live_Feed.json"
+# This tells the app to look in the SAME FOLDER where app.py is sitting
+JSON_PATH = "Agentic_GDP_Live_Feed.json"
 
 # --- 2. THE HEADER ---
 st.subheader("Institutional Intelligence for the Solana AI Ecosystem")
