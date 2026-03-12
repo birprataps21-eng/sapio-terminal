@@ -1,0 +1,16 @@
+{
+    "timestamp": 1773339472.827878,
+    "global_aGDP_estimate": "$4.2 Billion",
+    "top_movers": [
+        {
+            "name": "Sentient-Trader-v4",
+            "chain": "Solana",
+            "daily_volume": "$890k"
+        },
+        {
+            "name": "Neural-Arbitrage-Bot",
+            "chain": "Base",
+            "daily_volume": "$1.2M"
+        }
+    ]
+}
