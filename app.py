@@ -1,62 +1,77 @@
 import streamlit as st
 import pandas as pd
 import random
+import time
 from datetime import datetime
 
-# --- 1. PAGE CONFIG ---
-st.set_page_config(page_title="Sapio Intelligence | v5.0", page_icon="⚡", layout="wide")
+# --- 1. PAGE CONFIGURATION ---
+st.set_page_config(page_title="Sapio Intelligence | v6.1", page_icon="⚡", layout="wide")
 
-# --- 2. THE "NO-FILE" DATA GENERATOR ---
-# This replaces the scraper.py and the JSON files entirely.
+# --- 2. SESSION STATE (The Revenue Engine) ---
+if 'total_revenue' not in st.session_state:
+    st.session_state.total_revenue = 0.0
+if 'missions_completed' not in st.session_state:
+    st.session_state.missions_completed = 0
+if 'agent_performance' not in st.session_state:
+    st.session_state.agent_performance = {
+        "Sapio-Alpha-1": 0.0,
+        "Whale-Tracker": 0.0,
+        "Yield-Hunter": 0.0
+    }
+
+# --- 3. THE "NO-FILE" DATA FEED ---
 def get_live_data():
     return {
         "gdp_val": f"${round(random.uniform(6.5, 6.8), 2)}B",
         "movers": [
-            {"Project": "LiquidX (XRPL)", "Volume": "$92M", "Trend": "🚀 High"},
-            {"Project": "NearScribe AI", "Volume": "$31M", "Trend": "📈 Steady"},
-            {"Project": "Sapio Oracle", "Volume": "$12M", "Trend": "🔥 New"}
+            {"Project": "LiquidX (XRPL)", "Volume": "$142M", "Trend": "🚀 High"},
+            {"Project": "NearScribe AI", "Volume": "$54M", "Trend": "📈 Steady"},
+            {"Project": "Sapio Oracle", "Volume": "$18M", "Trend": "🔥 New"}
         ],
-        "agents": [
-            {"agent": "Sapio-Alpha-1", "task": "Scanning XRPL Nodes", "status": "ACTIVE"},
-            {"agent": "Whale-Tracker", "task": "Monitoring NEAR Shards", "status": "ACTIVE"}
-        ],
-        "insight": "AI Cluster Analysis: Heavy institutional accumulation detected on XRPL. NEAR sharding protocol optimized for next-gen AI compute."
+        "news": ["SYSTEM: AI Brain Linked", "XRPL: x402 Node Online", "NEAR: AI Compute Demand Spike"]
     }
 
 data = get_live_data()
 
-# --- 3. UI LAYOUT (From your screenshot) ---
+# --- 4. SIDEBAR ---
 with st.sidebar:
     st.image("https://img.icons8.com/ios-filled/100/ffffff/radar.png", width=60)
     st.title("Sapio Command")
     st.success("✓ XRPL x402 Node: ONLINE")
     st.success("✓ NEAR Sharding: OPTIMIZED")
     st.divider()
-    st.markdown("### 🛰️ Whale Watcher")
-    st.caption(f"{datetime.now().strftime('%H:%M')} | 1.2M XRP → Institutional")
-    st.caption(f"{datetime.now().strftime('%H:%M')} | 45k NEAR → AI Pool")
+    st.markdown("### 🏦 Platform Treasury")
+    st.metric("Total Revenue Collected", f"${round(st.session_state.total_revenue, 2)}", f"+{st.session_state.missions_completed} missions")
+    st.divider()
+    st.markdown("### 🛰️ Live Whale Feed")
+    st.caption(f"{datetime.now().strftime('%H:%M')} | 1.2M XRP → Insto Custody")
+    st.caption(f"{datetime.now().strftime('%H:%M')} | 45k NEAR → Compute Pool")
 
+# --- 5. MAIN UI HEADER ---
 st.title("🌐 Sapio Intelligence Terminal")
-st.markdown("### `System Status: AI INTEGRATED GOD MODE`")
+st.markdown("### `System Status: REVENUE GENERATION ACTIVE`")
 
-# --- TICKER ---
-st.markdown(f"""
+# --- 6. TICKER (This was likely where the Error lived) ---
+news_string = " • ".join(data["news"])
+rev_val = round(st.session_state.total_revenue, 2)
+ticker_html = f"""
     <div style="background-color: #0e1117; padding: 12px; border-radius: 10px; border: 2px solid #00ffcc;">
         <marquee style="color: #00ffcc; font-family: 'Courier New'; font-weight: bold;">
-            [LIVE ALPHA FEED] • XRPL: x402 Node Online • NEAR: AI Compute Demand Spike • aGDP at {data['gdp_val']}
+            [LIVE ALPHA FEED] • {news_string} • Platform Revenue: ${rev_val}
         </marquee>
     </div>
-""", unsafe_allow_html=True)
+"""
+st.markdown(ticker_html, unsafe_allow_html=True)
 
-# --- METRICS ---
+# --- 7. TOP LEVEL METRICS ---
 st.write("")
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Agentic GDP", data["gdp_val"], "+14.2%")
-m2.metric("XRPL Standard", "ISO-20022", "Active")
+m2.metric("Missions Run", st.session_state.missions_completed, "Active")
 m3.metric("NEAR Nodes", "14,802", "+402")
 m4.metric("AI Confidence", "98.4%", "Optimal")
 
-# --- CHART & PROJECTS TABLE ---
+# --- 8. CHART & LEADERBOARD ---
 st.divider()
 col_left, col_right = st.columns([2, 1])
 
@@ -69,40 +84,45 @@ with col_left:
     st.area_chart(chart_data.set_index('Time'), color="#00ffcc")
 
 with col_right:
-    st.subheader("🚀 Top Movers")
-    st.dataframe(pd.DataFrame(data["movers"]), hide_index=True, use_container_width=True)
+    st.subheader("🏆 Agent Leaderboard")
+    perf_data = []
+    for k, v in st.session_state.agent_performance.items():
+        perf_data.append({"Agent": k, "Revenue Gen": f"${round(v, 2)}"})
+    st.table(pd.DataFrame(perf_data))
 
-# --- AGENTS ---
+# --- 9. THE INTENT SOLVER (THE MONEY MAKER) ---
 st.divider()
-st.subheader("🤖 Autonomous Agent Command")
-cols = st.columns(len(data["agents"]))
-for i, task in enumerate(data["agents"]):
-    with cols[i]:
-        with st.container(border=True):
-            st.markdown(f"**{task['agent']}**")
-            st.caption(task['task'])
-            st.write(f"🟢 {task['status']}")
-            st.progress(random.randint(75, 98))
-
-# --- AI CHAT ---
-st.divider()
-st.subheader("🧠 Ask Sapio AI (v1.0-Alpha)")
-with st.container(border=True):
-    u = st.text_input("Analyze the current market...")
-    if u:
-        st.chat_message("assistant").info(data["insight"])
-
-st.divider()
-st.caption(f"© 2026 Sapio Intel | Session Sync: {datetime.now().strftime('%H:%M:%S')}")
-st.divider()
-st.subheader("⚡ Sapio Intent Engine (Revenue Layer)")
+st.subheader("⚡ Sapio Autonomous Intent Solver")
+st.caption("Instruct your agent to execute on-chain missions.")
 
 with st.container(border=True):
-    col_a, col_b = st.columns([3, 1])
-    with col_a:
-        intent = st.text_input("Set an Autonomous Mission...", placeholder="e.g. 'Swap 100 USDC for NEAR if AI Confidence hits 99%'")
-    with col_b:
-        if st.button("🚀 Deploy Mission"):
-            st.success("Mission Authorized. Agent 'Sapio-Alpha-1' is now a Solver.")
-            st.balloons()
-            st.info("Projected Revenue Share: 0.12% per execution")
+    col_input, col_btn = st.columns([3, 1])
+    with col_input:
+        selected_agent = st.selectbox("Assign Agent", list(st.session_state.agent_performance.keys()))
+        user_mission = st.text_input("Set Mission", placeholder="e.g. 'Harvest XRPL yield if APY > 15%'")
+    with col_btn:
+        st.write("###") # Spacer
+        deploy = st.button("🚀 Deploy Mission", use_container_width=True)
+
+    if deploy and user_mission:
+        with st.status(f"Agent '{selected_agent}' Executing...", expanded=True) as status:
+            st.write("🔍 Scanning liquidity on XRPL/NEAR...")
+            time.sleep(1)
+            st.write("⛓️ Verifying Intent Signature...")
+            time.sleep(1)
+            
+            fee_earned = round(random.uniform(0.10, 0.85), 2)
+            st.session_state.total_revenue += fee_earned
+            st.session_state.missions_completed += 1
+            st.session_state.agent_performance[selected_agent] += fee_earned
+            
+            status.update(label=f"SUCCESS: Mission Complete. Fee: ${fee_earned}", state="complete")
+        st.balloons()
+
+# --- 10. PROJECTS & MOVERS ---
+st.divider()
+st.subheader("🚀 Emerging Projects (AI Picks)")
+st.dataframe(pd.DataFrame(data["movers"]), hide_index=True, use_container_width=True)
+
+st.divider()
+st.caption(f"© 2026 Sapio Intel | Founder Edition | Last Sync: {datetime.now().strftime('%H:%M:%S')}")
