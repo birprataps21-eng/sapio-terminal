@@ -94,3 +94,15 @@ with st.container(border=True):
 
 st.divider()
 st.caption(f"© 2026 Sapio Intel | Session Sync: {datetime.now().strftime('%H:%M:%S')}")
+st.divider()
+st.subheader("⚡ Sapio Intent Engine (Revenue Layer)")
+
+with st.container(border=True):
+    col_a, col_b = st.columns([3, 1])
+    with col_a:
+        intent = st.text_input("Set an Autonomous Mission...", placeholder="e.g. 'Swap 100 USDC for NEAR if AI Confidence hits 99%'")
+    with col_b:
+        if st.button("🚀 Deploy Mission"):
+            st.success("Mission Authorized. Agent 'Sapio-Alpha-1' is now a Solver.")
+            st.balloons()
+            st.info("Projected Revenue Share: 0.12% per execution")
