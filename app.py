@@ -5,64 +5,56 @@ import time
 import requests
 from datetime import datetime
 
-# --- 1. INSTITUTIONAL THEMING (The Professional Secret) ---
+# --- 1. GLOBAL UI CONFIGURATION ---
 st.set_page_config(page_title="Sapio Intelligence Terminal", page_icon="⚡", layout="wide")
 
-# Custom CSS for the "Team-Built" look
+# Institutional Glassmorphism CSS
 st.markdown("""
     <style>
-    /* Main Background */
-    .stApp {
-        background-color: #05070a;
-        color: #e0e0e0;
+    .stApp { background-color: #05070a; color: #e0e0e0; }
+    
+    /* Glassmorphism Cards */
+    div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
+        background: rgba(17, 25, 40, 0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 20px;
     }
     
-    /* Custom Card Styling */
-    div.stElementContainer div[data-testid="stVerticalBlock"] > div {
-        background-color: #0d1117;
-        border: 1px solid #1f2937;
-        border-radius: 12px;
-        padding: 20px;
-        transition: all 0.3s ease;
-    }
-    
-    div.stElementContainer div[data-testid="stVerticalBlock"] > div:hover {
-        border-color: #00ffcc;
-        box-shadow: 0px 0px 15px rgba(0, 255, 204, 0.1);
+    /* Top Navigation Bar Styling */
+    .nav-bar {
+        background: rgba(10, 15, 25, 0.9);
+        border-bottom: 1px solid #1f2937;
+        padding: 1rem;
+        border-radius: 0 0 15px 15px;
     }
 
-    /* Professional Metric Styling */
-    [data-testid="stMetricValue"] {
-        font-size: 2rem !important;
-        font-weight: 700 !important;
-        color: #00ffcc !important;
-    }
+    /* Metric Customization */
+    [data-testid="stMetricValue"] { font-size: 1.8rem !important; color: #00ffcc !important; }
+    [data-testid="stMetricDelta"] { font-size: 0.9rem !important; }
 
-    /* Glowing Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #0a0d12 !important;
-        border-right: 1px solid #1f2937;
-    }
-
-    /* Buttons that look like FinTech */
+    /* Corporate Button Styling */
     .stButton>button {
-        background: linear-gradient(90deg, #00ffcc 0%, #00ccff 100%);
+        background: #00ffcc;
         color: #05070a !important;
-        font-weight: bold;
-        border-radius: 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
         border: none;
-        padding: 10px 24px;
-        width: 100%;
+        transition: 0.3s;
     }
+    .stButton>button:hover { background: #00ccff; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. DATA ENGINES ---
+# --- 2. CORE DATA ENGINES ---
 @st.cache_resource
 def get_global_treasury():
-    return {"revenue": 1240.50, "missions": 412}
+    return {"revenue": 1240.50, "missions": 412, "history": [1050, 1100, 1150, 1180, 1240]}
 
-def get_live_prices():
+def get_market_data():
     try:
         url = "https://api.coingecko.com/api/v3/simple/price?ids=ripple,near,bitcoin&vs_currencies=usd&include_24hr_change=true"
         return requests.get(url).json()
@@ -70,77 +62,73 @@ def get_live_prices():
 
 treasury = get_global_treasury()
 
-# --- 3. LOGIC & STATE ---
-if 'wallet_address' not in st.session_state:
-    st.session_state.wallet_address = None
-if 'total_revenue' not in st.session_state:
-    st.session_state.total_revenue = treasury["revenue"]
+# --- 3. SESSION & NAVIGATION ---
+if 'view_mode' not in st.session_state: st.session_state.view_mode = "Operator"
+if 'wallet_address' not in st.session_state: st.session_state.wallet_address = None
 
-# --- 4. NAVIGATION / TOP BAR ---
-prices = get_live_prices()
-t1, t2, t3, t4 = st.columns([2, 1, 1, 1])
-with t1:
-    st.title("⚡ SAPIO INTEL")
-with t2:
-    if prices:
-        st.metric("XRP/USD", f"${prices['ripple']['usd']}", f"{round(prices['ripple']['usd_24h_change'], 2)}%")
-with t3:
-    if prices:
-        st.metric("NEAR/USD", f"${prices['near']['usd']}", f"{round(prices['near']['usd_24h_change'], 2)}%")
-with t4:
-    st.metric("NETWORK STATUS", "OPTIMAL", delta="14ms")
+# --- 4. TOP NAV BAR ---
+prices = get_market_data()
+with st.container():
+    c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+    with c1: st.title("⚡ SAPIO INTEL")
+    with c2: 
+        if prices: st.metric("XRP", f"${prices['ripple']['usd']}", f"{round(prices['ripple']['usd_24h_change'], 2)}%")
+    with c3:
+        if prices: st.metric("NEAR", f"${prices['near']['usd']}", f"{round(prices['near']['usd_24h_change'], 2)}%")
+    with c4:
+        st.session_state.view_mode = st.radio("Display Mode", ["Operator", "Investor"], horizontal=True, label_visibility="collapsed")
 
 st.divider()
 
-# --- 5. MAIN TERMINAL LAYOUT ---
-col_sidebar, col_main = st.columns([1, 3])
-
-with col_sidebar:
-    st.markdown("### 🔐 Security Hub")
-    if not st.session_state.wallet_address:
-        if st.button("CONNECT CORPORATE WALLET"):
-            st.session_state.wallet_address = f"r{random.randint(100, 999)}...Sapio"
-            st.rerun()
-    else:
-        st.success(f"ID: {st.session_state.wallet_address}")
+# --- 5. DYNAMIC VIEW LOGIC ---
+if st.session_state.view_mode == "Operator":
+    # OPERATOR VIEW: Interaction-heavy
+    col_ctrl, col_main = st.columns([1, 2.5])
     
-    st.divider()
-    st.markdown("### 🏦 Platform Treasury")
-    st.metric("Gross Revenue (USDC)", f"${round(st.session_state.total_revenue, 2)}")
-    
-    st.divider()
-    st.markdown("### 🛰️ Live Logs")
-    st.caption("● Node-Alpha-4: Active")
-    st.caption("● Intent-Relay: Verified")
-
-with col_main:
-    # Mission Center
-    m_col1, m_col2 = st.columns([2, 1])
-    with m_col1:
-        st.markdown("### ⚡ Deploy Autonomous Intent")
+    with col_ctrl:
+        st.markdown("### 🏦 Platform Treasury")
+        st.metric("Gross Revenue", f"${round(treasury['revenue'], 2)}", "Active")
+        
+        st.divider()
+        st.markdown("### 🔑 Authentication")
+        if not st.session_state.wallet_address:
+            if st.button("CONNECT CORPORATE WALLET", use_container_width=True):
+                st.session_state.wallet_address = f"r{random.randint(100, 999)}...SAPIO"
+                st.rerun()
+        else:
+            st.success(f"SECURE: {st.session_state.wallet_address}")
+            
+    with col_main:
+        st.markdown("### ⚡ Intent Mission Center")
         with st.container():
-            mission = st.text_input("Enter Institutional Mission", placeholder="e.g. Sweep XRPL liquidity if pool > 1M", disabled=not st.session_state.wallet_address)
-            if st.button("DEPLOY TO SAPIO CLOUD", disabled=not st.session_state.wallet_address):
-                with st.status("Solving via Sapio Agentic Network..."):
-                    time.sleep(1.5)
-                    fee = round(random.uniform(0.10, 0.95), 2)
-                    st.session_state.total_revenue += fee
-                    treasury["revenue"] = st.session_state.total_revenue
-                st.success(f"Mission Executed. Platform Fee: ${fee}")
-                st.balloons()
+            mission = st.text_input("Define On-Chain Intent", placeholder="e.g. Execute arbitrage on XRPL DEX...", disabled=not st.session_state.wallet_address)
+            if st.button("EXECUTE MISSION", disabled=not st.session_state.wallet_address):
+                with st.status("Solving Intent..."):
+                    time.sleep(1.2)
+                    fee = round(random.uniform(0.15, 0.85), 2)
+                    treasury["revenue"] += fee
+                    treasury["history"].append(treasury["revenue"])
+                st.success(f"Success. Fee: ${fee}")
+
+else:
+    # INVESTOR VIEW: Growth & Data-heavy
+    st.markdown("## 📊 Institutional Performance Report")
     
-    with m_col2:
-        st.markdown("### 🏆 Performance")
-        st.dataframe(pd.DataFrame([
-            {"Agent": "Alpha-1", "Profit": "$412"},
-            {"Agent": "Whale", "Profit": "$389"},
-            {"Agent": "Yield", "Profit": "$210"}
-        ]), hide_index=True)
+    inv_col1, inv_col2, inv_col3 = st.columns(3)
+    inv_col1.metric("Current Valuation", "$12.4M", "Series A Target")
+    inv_col2.metric("Agent Utilization", "94.2%", "+2.1%")
+    inv_col3.metric("Platform Fees (Avg)", "$0.52", "Stable")
+    
+    st.markdown("### 📈 Revenue Growth Curve")
+    st.area_chart(treasury["history"], color="#00ffcc")
+    
+    st.markdown("### 🏆 Top Yield Agents")
+    st.table(pd.DataFrame([
+        {"Agent": "Alpha-1", "AUM Managed": "$1.2M", "Revenue Gen": "$412"},
+        {"Agent": "Whale-Track", "AUM Managed": "$4.5M", "Revenue Gen": "$389"},
+        {"Agent": "Yield-Optim", "AUM Managed": "$0.8M", "Revenue Gen": "$210"}
+    ]))
 
-    # Market Intelligence Chart
-    st.markdown("### 💹 Market Sentiment Analysis")
-    chart_data = pd.DataFrame(random.sample(range(60, 100), 20), columns=['AI Confidence'])
-    st.area_chart(chart_data, color="#00ffcc")
-
+# --- 6. FOOTER ---
 st.markdown("---")
-st.caption(f"Proprietary Technology of Sapio Intel Corp © 2026 | Deployment Version 9.0.4")
+st.caption(f"Proprietary AI Terminal • v9.5.0 • Last Heartbeat: {datetime.now().strftime('%H:%M:%S')}")
