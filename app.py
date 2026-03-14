@@ -9,62 +9,64 @@ import numpy as np
 # -------------------------------------------------
 
 st.set_page_config(
-    page_title="Sapio Institutional Intelligence",
+    page_title="Sapio Intelligence Terminal",
     page_icon="📊",
     layout="wide"
 )
 
 # -------------------------------------------------
-# PROFESSIONAL CSS + ANIMATION
+# TERMINAL STYLE UI
 # -------------------------------------------------
 
 st.markdown("""
 <style>
 
 body {
-    background-color:#0e1117;
+    background-color:#0b0f19;
 }
 
-.top-banner {
-    width:100%;
-    padding:20px;
-    background:linear-gradient(90deg,#111827,#1f2937);
-    border-radius:10px;
-    margin-bottom:20px;
-    animation: fadeIn 2s ease-in;
+.top-banner{
+background:linear-gradient(90deg,#111827,#1f2937);
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+animation:fadeIn 2s ease-in;
 }
 
-.banner-text {
-    font-size:22px;
-    font-weight:600;
-    color:white;
-    text-align:center;
+.banner-text{
+color:white;
+font-size:22px;
+font-weight:600;
+text-align:center;
 }
 
-@keyframes fadeIn {
-    from {opacity:0;}
-    to {opacity:1;}
+.sidebar .sidebar-content {
+background-color:#0b0f19;
 }
 
-.metric-box {
-    background-color:#1c1f26;
-    padding:10px;
-    border-radius:10px;
+.stButton>button{
+background-color:#2563eb;
+color:white;
+border-radius:8px;
+}
+
+@keyframes fadeIn{
+from{opacity:0}
+to{opacity:1}
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------
-# ANIMATED TOP BANNER
+# TOP BANNER
 # -------------------------------------------------
 
 st.markdown("""
 <div class="top-banner">
 <div class="banner-text">
-🚀 Sapio Institutional Intelligence — A professional terminal providing 
-AI-powered market analysis, institutional tools, and a global grant discovery system 
-for startups, researchers, and organizations seeking funding.
+Sapio Institutional Intelligence Terminal — Financial analytics, AI insights,
+and a global grant discovery platform for startups, researchers, and institutions.
 </div>
 </div>
 """, unsafe_allow_html=True)
@@ -73,30 +75,30 @@ for startups, researchers, and organizations seeking funding.
 # HEADER
 # -------------------------------------------------
 
-st.title("📊 Sapio Finance & Grants Terminal")
+st.title("Sapio Intelligence Terminal")
 
 st.write(
-"Professional intelligence platform combining financial analytics, AI insights, and grant discovery."
+"Professional institutional intelligence combining financial markets and grant funding data."
 )
 
 # -------------------------------------------------
-# SIDEBAR NAVIGATION
+# SIDEBAR
 # -------------------------------------------------
 
 st.sidebar.title("Terminal Menu")
 
 page = st.sidebar.radio(
-    "Navigate",
-    [
-        "Market Dashboard",
-        "Stock Analyzer",
-        "Crypto Dashboard",
-        "AI Market Insights",
-        "Sentiment Analysis",
-        "Portfolio Tracker",
-        "Grant Finder",
-        "Premium Tools"
-    ]
+"Navigate",
+[
+"Market Dashboard",
+"Stock Analyzer",
+"Crypto Dashboard",
+"AI Market Insights",
+"Sentiment Analysis",
+"Portfolio Tracker",
+"Grant Database",
+"Premium Tools"
+]
 )
 
 # -------------------------------------------------
@@ -105,27 +107,20 @@ page = st.sidebar.radio(
 
 if page == "Market Dashboard":
 
-    st.header("Global Market Overview")
+    st.header("Global Markets")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1,col2,col3,col4 = st.columns(4)
 
     col1.metric("S&P 500","5120","+1.2%")
     col2.metric("NASDAQ","16320","+0.8%")
     col3.metric("Bitcoin","$68200","+2.4%")
     col4.metric("Gold","$2150","+0.5%")
 
-    st.subheader("Market Trends")
-
     data = px.data.stocks()
 
-    fig = px.line(
-        data,
-        x="date",
-        y=data.columns[1:],
-        title="Global Market Trend"
-    )
+    fig = px.line(data,x="date",y=data.columns[1:],title="Market Trend")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig,use_container_width=True)
 
 # -------------------------------------------------
 # STOCK ANALYZER
@@ -133,29 +128,19 @@ if page == "Market Dashboard":
 
 elif page == "Stock Analyzer":
 
-    st.header("Stock Analysis Tool")
+    st.header("Stock Analysis")
 
-    ticker = st.text_input("Enter Stock Ticker","AAPL")
+    ticker = st.text_input("Stock Ticker","AAPL")
 
-    period = st.selectbox(
-        "Select Time Period",
-        ["1mo","3mo","6mo","1y","5y"]
-    )
+    period = st.selectbox("Period",["1mo","3mo","6mo","1y","5y"])
 
-    if st.button("Analyze Stock"):
+    if st.button("Analyze"):
 
         stock = yf.download(ticker,period=period)
 
-        fig = px.line(
-            stock,
-            x=stock.index,
-            y="Close",
-            title=f"{ticker} Price Chart"
-        )
+        fig = px.line(stock,x=stock.index,y="Close",title=f"{ticker} Price")
 
         st.plotly_chart(fig,use_container_width=True)
-
-        st.subheader("Recent Data")
 
         st.dataframe(stock.tail(20))
 
@@ -168,154 +153,146 @@ elif page == "Crypto Dashboard":
     st.header("Crypto Market")
 
     crypto_data = {
-        "Coin":["Bitcoin","Ethereum","Solana","BNB"],
-        "Price":[68200,3500,145,410],
-        "Change %":[2.4,1.8,3.5,1.1]
+    "Coin":["Bitcoin","Ethereum","Solana","BNB"],
+    "Price":[68200,3500,145,410],
+    "Change %":[2.4,1.8,3.5,1.1]
     }
 
     df = pd.DataFrame(crypto_data)
 
     st.dataframe(df)
 
-    fig = px.bar(
-        df,
-        x="Coin",
-        y="Price",
-        title="Crypto Market Prices"
-    )
+    fig = px.bar(df,x="Coin",y="Price",title="Crypto Prices")
 
     st.plotly_chart(fig,use_container_width=True)
 
 # -------------------------------------------------
-# AI MARKET INSIGHTS
+# AI INSIGHTS
 # -------------------------------------------------
 
 elif page == "AI Market Insights":
 
     st.header("AI Market Intelligence")
 
-    st.write("Generate AI-based market observations.")
-
-    if st.button("Generate AI Insight"):
+    if st.button("Generate Insight"):
 
         insights = [
-            "Technology sector showing strong institutional accumulation.",
-            "Crypto markets entering bullish consolidation.",
-            "AI companies outperforming major indices.",
-            "Energy sector attracting hedge fund capital."
+        "AI sector attracting institutional capital.",
+        "Crypto markets showing accumulation patterns.",
+        "Technology sector outperforming global markets.",
+        "Energy sector showing strong demand signals."
         ]
 
         st.success(np.random.choice(insights))
 
 # -------------------------------------------------
-# SENTIMENT ANALYSIS
+# SENTIMENT
 # -------------------------------------------------
 
 elif page == "Sentiment Analysis":
 
-    st.header("Market Sentiment Analysis")
+    st.header("Market Sentiment")
 
     sentiment_data = {
-        "Sector":["Technology","Energy","Finance","Healthcare"],
-        "Sentiment Score":[0.78,0.62,0.55,0.48]
+    "Sector":["Technology","Energy","Finance","Healthcare"],
+    "Sentiment":[0.78,0.62,0.55,0.48]
     }
 
     df = pd.DataFrame(sentiment_data)
 
-    fig = px.bar(
-        df,
-        x="Sector",
-        y="Sentiment Score",
-        title="Sector Sentiment"
-    )
+    fig = px.bar(df,x="Sector",y="Sentiment",title="Sector Sentiment")
 
     st.plotly_chart(fig)
 
 # -------------------------------------------------
-# PORTFOLIO TRACKER
+# PORTFOLIO
 # -------------------------------------------------
 
 elif page == "Portfolio Tracker":
 
-    st.header("Investment Portfolio")
+    st.header("Portfolio Tracker")
 
-    ticker = st.text_input("Ticker Symbol")
+    ticker = st.text_input("Ticker")
 
     amount = st.number_input("Investment Amount")
 
     if st.button("Add Investment"):
 
-        st.success(f"Added {ticker} investment worth ${amount}")
+        st.success(f"{ticker} added with value ${amount}")
 
 # -------------------------------------------------
-# GRANT FINDER
+# GRANT DATABASE
 # -------------------------------------------------
 
-elif page == "Grant Finder":
+elif page == "Grant Database":
 
-    st.header("Startup & Research Grant Finder")
+    st.header("Global Grant Intelligence Database")
 
-    st.write(
-    "Search potential funding opportunities for startups, researchers, and institutions."
-    )
+    data = {
+    "Grant":[
+    "Startup Innovation Grant",
+    "AI Research Grant",
+    "Tech Development Fund",
+    "Climate Innovation Grant",
+    "Healthcare Research Grant",
+    "Small Business Expansion Fund"
+    ],
 
-    grants = {
-        "Grant Name":[
-            "Startup Innovation Grant",
-            "Technology Development Fund",
-            "AI Research Grant",
-            "Small Business Growth Grant"
-        ],
+    "Funding":[
+    "$10k-$50k",
+    "$50k-$200k",
+    "$25k-$100k",
+    "$100k-$500k",
+    "$75k-$300k",
+    "$20k-$80k"
+    ],
 
-        "Funding Amount":[
-            "$10k-$50k",
-            "$25k-$100k",
-            "$50k-$200k",
-            "$20k-$80k"
-        ],
+    "Category":[
+    "Startups",
+    "Artificial Intelligence",
+    "Technology",
+    "Climate",
+    "Healthcare",
+    "Small Business"
+    ],
 
-        "Category":[
-            "Startups",
-            "Technology",
-            "Artificial Intelligence",
-            "Small Business"
-        ]
+    "Region":[
+    "Global",
+    "US/EU",
+    "Global",
+    "EU",
+    "US",
+    "Global"
+    ]
     }
 
-    df = pd.DataFrame(grants)
+    df = pd.DataFrame(data)
+
+    category = st.selectbox(
+    "Filter by Category",
+    ["All","Startups","Artificial Intelligence","Technology","Climate","Healthcare","Small Business"]
+    )
+
+    if category != "All":
+        df = df[df["Category"] == category]
 
     st.dataframe(df)
 
-    industry = st.selectbox(
-        "Select Industry",
-        [
-            "Technology",
-            "Healthcare",
-            "AI",
-            "Finance",
-            "Education"
-        ]
-    )
-
-    if st.button("Find Grants"):
-
-        st.success(f"Showing grant opportunities for {industry} sector.")
-
 # -------------------------------------------------
-# PREMIUM TOOLS
+# PREMIUM
 # -------------------------------------------------
 
 elif page == "Premium Tools":
 
-    st.header("Premium Institutional Tools")
+    st.header("Institutional Premium Tools")
 
-    st.warning("Upgrade required to access advanced analytics.")
+    st.warning("Upgrade required for advanced analytics")
 
     st.write("🔒 Institutional Flow Tracking")
     st.write("🔒 Hedge Fund Signals")
-    st.write("🔒 AI Trading Predictions")
-    st.write("🔒 Quant Risk Analysis")
+    st.write("🔒 AI Trading Models")
+    st.write("🔒 Advanced Grant Intelligence")
 
     if st.button("Upgrade to Pro"):
 
-        st.success("Redirecting to subscription system...")
+        st.success("Crypto payment gateway coming soon.")
