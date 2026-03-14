@@ -1,115 +1,248 @@
 import streamlit as st
+import sqlite3
 import pandas as pd
-import random
-import time
-import requests
 from datetime import datetime
 
-# --- 1. GLOBAL UI & THEME ---
-st.set_page_config(page_title="Sapio Sovereign | ISO 20022", page_icon="🏦", layout="wide")
+# -----------------------------
+# Database Setup
+# -----------------------------
+conn = sqlite3.connect("sapio.db", check_same_thread=False)
+c = conn.cursor()
 
-st.markdown("""
-    <style>
-    /* Dark Institutional Base */
-    .stApp { background-color: #05070a; color: #e2e8f0; }
-    
-    /* Side-by-Side Card Styling */
-    div[data-testid="column"] {
-        background: #0d1117;
-        border: 1px solid #1f2937;
-        padding: 20px;
-        border-radius: 8px;
-    }
-    
-    /* Heavyweight Metric Glow */
-    [data-testid="stMetricValue"] { color: #00ffcc !important; font-family: 'JetBrains Mono', monospace; font-size: 1.8rem !important; }
-    
-    /* ISO 20022 Status Bar */
-    .iso-banner {
-        background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
-        border: 1px solid #00ffcc;
-        color: #00ffcc;
-        padding: 10px;
-        text-align: center;
-        font-weight: bold;
-        letter-spacing: 2px;
-        margin-bottom: 20px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+c.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    wallet TEXT
+)
+""")
 
-# --- 2. THE REAL-TIME ENGINE ---
-@st.cache_resource
-def init_protocol():
-    return {"gdp": 6.57, "rev": 0.00, "history": [6.50, 6.52, 6.55, 6.57]}
+c.execute("""
+CREATE TABLE IF NOT EXISTS grants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    ecosystem TEXT,
+    budget REAL,
+    description TEXT,
+    created_at TEXT
+)
+""")
 
-def get_live_market():
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=ripple,near,bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true"
-        return requests.get(url).json()
-    except: return None
+c.execute("""
+CREATE TABLE IF NOT EXISTS applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    grant_id INTEGER,
+    applicant TEXT,
+    github TEXT,
+    proposal TEXT,
+    score REAL,
+    status TEXT
+)
+""")
 
-state = init_protocol()
-prices = get_live_market()
+conn.commit()
 
-# --- 3. THE "CONTROL TOWER" SIDEBAR ---
-with st.sidebar:
-    st.title("⚡ SAPIO CORE")
-    st.markdown("---")
-    st.subheader("🏦 GLOBAL TREASURY")
-    st.metric("REAL REVENUE", f"${round(state['rev'], 4)}")
-    st.metric("AGENTIC GDP", f"${state['gdp']}B", "+0.02")
-    
-    st.markdown("---")
-    st.subheader("🔐 AUTHENTICATION")
-    if 'auth' not in st.session_state: st.session_state.auth = False
-    if not st.session_state.auth:
-        if st.button("CONNECT HSM WALLET", use_container_width=True):
-            st.session_state.auth = True
-            st.rerun()
-    else:
-        st.success("SESSION: SECURE")
-        if st.button("DISCONNECT", use_container_width=True):
-            st.session_state.auth = False
-            st.rerun()
+# -----------------------------
+# Helper Functions
+# -----------------------------
 
-# --- 4. MAIN TERMINAL BODY ---
-st.markdown('<div class="iso-banner">ISO 20022 COMPLIANT | PACS.008 REAL-TIME SETTLEMENT | AGENTIC ECONOMY ACTIVE</div>', unsafe_allow_html=True)
+def ai_score_proposal(text):
+    """Mock AI scoring system"""
+    length = len(text)
+    score = min(100, (length / 10))
+    return round(score, 2)
 
-# TOP ROW: MARKET & COMPLIANCE
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.subheader("💹 Market Feed")
-    if prices:
-        st.write(f"● XRP: **${prices['ripple']['usd']}** ({round(prices['ripple']['usd_24h_change'], 2)}%)")
-        st.write(f"● NEAR: **${prices['near']['usd']}** ({round(prices['near']['usd_24h_change'], 2)}%)")
-        st.write(f"● BTC: **${prices['bitcoin']['usd']}** ({round(prices['bitcoin']['usd_24h_change'], 2)}%)")
-    else:
-        st.error("Market API Offline")
 
-with col2:
-    st.subheader("📈 GDP Momentum")
-    st.line_chart(state['history'], color="#00ffcc", height=150)
+def fetch_grants():
+    return pd.read_sql_query("SELECT * FROM grants", conn)
 
-with col3:
-    st.subheader("🛰️ Infra Status")
-    st.caption("🟢 LONDON (HQ): ACTIVE")
-    st.caption("🟢 SINGAPORE: ACTIVE")
-    st.caption("🟢 TOKYO: ACTIVE")
-    st.progress(98, text="Node Sync")
 
-# BOTTOM ROW: THE MISSION COMMAND
-st.markdown("### ⚡ DEPLOY AUTONOMOUS INTENT")
-with st.container():
-    cmd = st.text_input("Enter Protocol Mission", placeholder="e.g. Optimize cross-chain liquidity...", label_visibility="collapsed", disabled=not st.session_state.auth)
-    if st.button("EXECUTE ON-CHAIN", use_container_width=True, disabled=not st.session_state.auth):
-        with st.status("Solving via Sapio Rust Kernel..."):
-            time.sleep(1)
-            state['rev'] += 0.0025
-            state['gdp'] += 0.01
-            state['history'].append(state['gdp'])
-        st.success(f"Mission Settled. Revenue Captured.")
-        st.rerun()
+def fetch_apps():
+    return pd.read_sql_query("SELECT * FROM applications", conn)
 
-st.markdown("---")
-st.caption(f"SAPIO SOVEREIGN v16.0 | SYSTEM TIME: {datetime.now().strftime('%H:%M:%S UTC')}")
+
+# -----------------------------
+# UI CONFIG
+# -----------------------------
+
+st.set_page_config(
+    page_title="Sapio Grant Terminal",
+    layout="wide",
+)
+
+st.title("⚡ Sapio Grant Infrastructure")
+
+# -----------------------------
+# Sidebar
+# -----------------------------
+
+st.sidebar.header("Navigation")
+page = st.sidebar.radio(
+    "Go to",
+    [
+        "Dashboard",
+        "Create Grant",
+        "Grant Marketplace",
+        "Apply For Grant",
+        "Review Applications",
+    ],
+)
+
+# -----------------------------
+# DASHBOARD
+# -----------------------------
+
+if page == "Dashboard":
+
+    grants = fetch_grants()
+    apps = fetch_apps()
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Total Grants", len(grants))
+    col2.metric("Applications", len(apps))
+    col3.metric("Approved", len(apps[apps.status == "approved"]))
+
+    st.subheader("Recent Grants")
+    st.dataframe(grants.tail(10))
+
+    st.subheader("Application Activity")
+    st.dataframe(apps.tail(10))
+
+
+# -----------------------------
+# CREATE GRANT
+# -----------------------------
+
+if page == "Create Grant":
+
+    st.header("Create Grant Program")
+
+    title = st.text_input("Grant Title")
+
+    ecosystem = st.selectbox(
+        "Ecosystem",
+        ["Ethereum", "Solana", "XRP", "AI Research", "Other"],
+    )
+
+    budget = st.number_input("Grant Budget", min_value=0.0)
+
+    description = st.text_area("Grant Description")
+
+    if st.button("Create Grant"):
+
+        c.execute(
+            "INSERT INTO grants VALUES (NULL,?,?,?,?,?)",
+            (title, ecosystem, budget, description, datetime.now()),
+        )
+
+        conn.commit()
+
+        st.success("Grant Created")
+
+
+# -----------------------------
+# MARKETPLACE
+# -----------------------------
+
+if page == "Grant Marketplace":
+
+    st.header("Active Grants")
+
+    grants = fetch_grants()
+
+    for _, row in grants.iterrows():
+
+        with st.container():
+
+            st.subheader(row["title"])
+            st.write("Ecosystem:", row["ecosystem"])
+            st.write("Budget:", row["budget"])
+            st.write(row["description"])
+
+            st.divider()
+
+
+# -----------------------------
+# APPLY
+# -----------------------------
+
+if page == "Apply For Grant":
+
+    st.header("Submit Grant Application")
+
+    grants = fetch_grants()
+
+    grant_titles = grants["title"].tolist()
+
+    selected = st.selectbox("Select Grant", grant_titles)
+
+    applicant = st.text_input("Your Name")
+
+    github = st.text_input("GitHub Repository")
+
+    proposal = st.text_area("Proposal")
+
+    if st.button("Submit Application"):
+
+        grant_id = int(grants[grants.title == selected].id.values[0])
+
+        score = ai_score_proposal(proposal)
+
+        c.execute(
+            "INSERT INTO applications VALUES (NULL,?,?,?,?,?,?)",
+            (grant_id, applicant, github, proposal, score, "submitted"),
+        )
+
+        conn.commit()
+
+        st.success(f"Application submitted. AI Score: {score}")
+
+
+# -----------------------------
+# REVIEW
+# -----------------------------
+
+if page == "Review Applications":
+
+    st.header("Reviewer Console")
+
+    apps = fetch_apps()
+
+    if len(apps) == 0:
+        st.info("No applications yet")
+
+    for _, row in apps.iterrows():
+
+        with st.container():
+
+            st.subheader(row["applicant"])
+            st.write("GitHub:", row["github"])
+            st.write("Score:", row["score"])
+            st.write("Status:", row["status"])
+
+            col1, col2 = st.columns(2)
+
+            if col1.button(f"Approve {row['id']}"):
+
+                c.execute(
+                    "UPDATE applications SET status='approved' WHERE id=?",
+                    (row["id"],),
+                )
+
+                conn.commit()
+
+                st.rerun()
+
+            if col2.button(f"Reject {row['id']}"):
+
+                c.execute(
+                    "UPDATE applications SET status='rejected' WHERE id=?",
+                    (row["id"],),
+                )
+
+                conn.commit()
+
+                st.rerun()
+
+            st.divider()
