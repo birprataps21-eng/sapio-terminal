@@ -1,408 +1,241 @@
 import streamlit as st
-import sqlite3
 import pandas as pd
-import requests
 import plotly.express as px
-from datetime import datetime
+import yfinance as yf
+import numpy as np
 
-# ======================================================
-# SAPIO TERMINAL - FULL MVP BUILD
-# Grant Infrastructure + Grant Intelligence + AI Console
-# ======================================================
+# -------------------------------
+# PAGE CONFIG
+# -------------------------------
 
-st.set_page_config(page_title="Sapio Terminal", layout="wide", page_icon="⚡")
+st.set_page_config(
+    page_title="Sapio Finance Terminal",
+    page_icon="📊",
+    layout="wide"
+)
 
-# ======================================================
-# STYLING
-# ======================================================
+# -------------------------------
+# PROFESSIONAL CSS
+# -------------------------------
 
 st.markdown("""
 <style>
-body {background-color:#0b0f19}
-.block-container {padding-top:1rem}
-
-.metric-card {
-    background: linear-gradient(145deg,#111827,#0b1220);
-    padding:20px;
-    border-radius:12px;
-    border:1px solid #1f2937;
+body {
+    background-color: #0e1117;
 }
-
-.market-card {
-    background:#0f172a;
+.main-title {
+    font-size:40px;
+    font-weight:700;
+}
+.metric-box {
+    background-color:#1c1f26;
     padding:15px;
     border-radius:10px;
-    border:1px solid #1e293b;
 }
-
-textarea, input {
-    background-color:#020617 !important;
-    color:white !important;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
-# ======================================================
-# DATABASE
-# ======================================================
+# -------------------------------
+# HEADER
+# -------------------------------
 
-conn = sqlite3.connect("sapio.db", check_same_thread=False)
-c = conn.cursor()
+st.markdown("<p class='main-title'>📊 Sapio Finance Terminal</p>", unsafe_allow_html=True)
+st.write("AI Powered Market Intelligence Platform")
 
-c.execute("""
-CREATE TABLE IF NOT EXISTS grants (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    ecosystem TEXT,
-    budget REAL,
-    description TEXT,
-    created_at TEXT
-)
-""")
+# -------------------------------
+# SIDEBAR NAVIGATION
+# -------------------------------
 
-c.execute("""
-CREATE TABLE IF NOT EXISTS applications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    grant_id INTEGER,
-    applicant TEXT,
-    github TEXT,
-    proposal TEXT,
-    score REAL,
-    status TEXT
-)
-""")
-
-conn.commit()
-
-# ======================================================
-# MARKET DATA
-# ======================================================
-
-def get_crypto(symbol):
-
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={symbol}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true"
-
-    try:
-        r = requests.get(url).json()
-        d = r[symbol]
-
-        return {
-            "price": d["usd"],
-            "change": d["usd_24h_change"],
-            "volume": d["usd_24h_vol"]
-        }
-
-    except:
-        return {"price":0,"change":0,"volume":0}
-
-
-# ======================================================
-# AI PROPOSAL SCORING
-# ======================================================
-
-def ai_score(text):
-
-    words = len(text.split())
-    score = min(words * 0.5, 100)
-
-    return round(score,2)
-
-
-# ======================================================
-# GRANT INTELLIGENCE ENGINE
-# ======================================================
-
-def grant_intelligence():
-
-    grants = pd.read_sql_query("SELECT * FROM grants", conn)
-    apps = pd.read_sql_query("SELECT * FROM applications", conn)
-
-    if len(grants) == 0:
-        st.info("No data yet")
-        return
-
-    st.subheader("Grant Distribution")
-
-    fig = px.pie(grants, names="ecosystem", title="Grants by Ecosystem")
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    if len(apps) > 0:
-
-        st.subheader("Application Scores")
-
-        fig2 = px.histogram(apps, x="score", nbins=20)
-
-        st.plotly_chart(fig2, use_container_width=True)
-
-
-# ======================================================
-# AI COMMAND CONSOLE
-# ======================================================
-
-def ai_console():
-
-    st.subheader("⚡ AI Command Console")
-
-    cmd = st.text_input("Enter command", placeholder="analyze grant ecosystem")
-
-    if st.button("Execute"):
-
-        if "analyze" in cmd:
-
-            grants = pd.read_sql_query("SELECT * FROM grants", conn)
-
-            if len(grants)==0:
-                st.write("No grants to analyze")
-                return
-
-            ecosystem_counts = grants['ecosystem'].value_counts()
-
-            st.write("Top ecosystems:")
-            st.write(ecosystem_counts)
-
-        elif "market" in cmd:
-
-            btc = get_crypto("bitcoin")
-
-            st.write("BTC Market Data")
-            st.json(btc)
-
-        else:
-
-            st.write("Command not recognized")
-
-
-# ======================================================
-# LOADERS
-# ======================================================
-
-def load_grants():
-
-    return pd.read_sql_query("SELECT * FROM grants", conn)
-
-
-def load_apps():
-
-    return pd.read_sql_query("SELECT * FROM applications", conn)
-
-
-# ======================================================
-# SIDEBAR
-# ======================================================
-
-st.sidebar.title("⚡ SAPIO TERMINAL")
+st.sidebar.title("Terminal Menu")
 
 page = st.sidebar.radio(
-    "Navigation",
+    "Navigate",
     [
-        "Dashboard",
-        "Grant Marketplace",
-        "Create Grant",
-        "Apply",
-        "Review",
-        "Grant Intelligence",
-        "AI Command Console"
+        "Market Dashboard",
+        "Stock Analyzer",
+        "Crypto Dashboard",
+        "AI Market Insights",
+        "Sentiment Analysis",
+        "Portfolio Tracker",
+        "Premium Tools"
     ]
 )
 
+# -------------------------------
+# MARKET DASHBOARD
+# -------------------------------
 
-# ======================================================
-# DASHBOARD
-# ======================================================
+if page == "Market Dashboard":
 
-if page == "Dashboard":
+    st.header("Global Market Overview")
 
-    st.title("Sapio Sovereign Grant Terminal")
+    col1, col2, col3, col4 = st.columns(4)
 
-    btc = get_crypto("bitcoin")
-    eth = get_crypto("ethereum")
-    sol = get_crypto("solana")
+    col1.metric("S&P 500", "5,120", "+1.2%")
+    col2.metric("NASDAQ", "16,320", "+0.8%")
+    col3.metric("Bitcoin", "$68,200", "+2.4%")
+    col4.metric("Gold", "$2,150", "+0.5%")
 
-    col1,col2,col3 = st.columns(3)
+    st.subheader("Market Trends")
 
-    col1.metric("BTC", f"${btc['price']}", f"{btc['change']:.2f}%")
-    col1.caption(f"Volume ${btc['volume']:.0f}")
+    data = px.data.stocks()
 
-    col2.metric("ETH", f"${eth['price']}", f"{eth['change']:.2f}%")
-    col2.caption(f"Volume ${eth['volume']:.0f}")
-
-    col3.metric("SOL", f"${sol['price']}", f"{sol['change']:.2f}%")
-    col3.caption(f"Volume ${sol['volume']:.0f}")
-
-    st.divider()
-
-    grants = load_grants()
-    apps = load_apps()
-
-    c1,c2,c3 = st.columns(3)
-
-    c1.metric("Total Grants", len(grants))
-
-    c2.metric("Applications", len(apps))
-
-    c3.metric("Approved", len(apps[apps.status == "approved"]))
-
-
-# ======================================================
-# CREATE GRANT
-# ======================================================
-
-if page == "Create Grant":
-
-    st.header("Create Grant Program")
-
-    title = st.text_input("Grant Title")
-
-    ecosystem = st.selectbox(
-        "Ecosystem",
-        ["Ethereum","Solana","XRP","AI","Research"]
+    fig = px.line(
+        data,
+        x="date",
+        y=data.columns[1:],
+        title="Global Market Trend"
     )
 
-    budget = st.number_input("Budget", min_value=0.0)
+    st.plotly_chart(fig, use_container_width=True)
 
-    description = st.text_area("Description")
+# -------------------------------
+# STOCK ANALYZER
+# -------------------------------
 
-    if st.button("Create Grant"):
+elif page == "Stock Analyzer":
 
-        c.execute(
-            "INSERT INTO grants VALUES(NULL,?,?,?,?,?)",
-            (title,ecosystem,budget,description,datetime.now())
+    st.header("Stock Analysis Tool")
+
+    ticker = st.text_input("Enter Stock Ticker", "AAPL")
+
+    period = st.selectbox(
+        "Select Period",
+        ["1mo","3mo","6mo","1y","5y"]
+    )
+
+    if st.button("Analyze Stock"):
+
+        stock = yf.download(ticker, period=period)
+
+        fig = px.line(
+            stock,
+            x=stock.index,
+            y="Close",
+            title=f"{ticker} Price Chart"
         )
 
-        conn.commit()
+        st.plotly_chart(fig, use_container_width=True)
 
-        st.success("Grant created")
+        st.subheader("Raw Data")
 
+        st.dataframe(stock.tail(20))
 
-# ======================================================
-# MARKETPLACE
-# ======================================================
+# -------------------------------
+# CRYPTO DASHBOARD
+# -------------------------------
 
-if page == "Grant Marketplace":
+elif page == "Crypto Dashboard":
 
-    st.header("Active Grants")
+    st.header("Crypto Market Dashboard")
 
-    grants = load_grants()
+    crypto_data = {
+        "Coin": ["Bitcoin","Ethereum","Solana","BNB"],
+        "Price":[68200,3500,145,410],
+        "Change":[2.4,1.8,3.5,1.1]
+    }
 
-    if len(grants)==0:
-        st.info("No grants available")
+    df = pd.DataFrame(crypto_data)
 
-    for _,row in grants.iterrows():
+    st.dataframe(df)
 
-        st.subheader(row['title'])
-        st.write("Ecosystem:",row['ecosystem'])
-        st.write("Budget:",row['budget'])
-        st.write(row['description'])
+    fig = px.bar(
+        df,
+        x="Coin",
+        y="Price",
+        title="Crypto Prices"
+    )
 
-        st.divider()
+    st.plotly_chart(fig, use_container_width=True)
 
+# -------------------------------
+# AI INSIGHTS
+# -------------------------------
 
-# ======================================================
-# APPLY
-# ======================================================
+elif page == "AI Market Insights":
 
-if page == "Apply":
+    st.header("AI Market Insights")
 
-    st.header("Apply For Grant")
+    st.write(
+        "AI generated analysis of current market trends."
+    )
 
-    grants = load_grants()
+    if st.button("Generate Insight"):
 
-    if len(grants)==0:
-        st.info("No grants available")
+        insights = [
+            "Technology stocks showing strong upward momentum.",
+            "Crypto market entering bullish accumulation phase.",
+            "Energy sector outperforming global markets.",
+            "AI companies attracting institutional capital."
+        ]
 
-    else:
+        st.success(np.random.choice(insights))
 
-        titles = grants['title'].tolist()
+# -------------------------------
+# SENTIMENT ANALYSIS
+# -------------------------------
 
-        selected = st.selectbox("Select Grant",titles)
+elif page == "Sentiment Analysis":
 
-        name = st.text_input("Applicant Name")
+    st.header("Market Sentiment")
 
-        github = st.text_input("GitHub Repo")
+    sentiment_data = {
+        "Sector":[
+            "Technology",
+            "Energy",
+            "Finance",
+            "Healthcare"
+        ],
+        "Sentiment":[
+            0.78,
+            0.62,
+            0.55,
+            0.48
+        ]
+    }
 
-        proposal = st.text_area("Proposal")
+    df = pd.DataFrame(sentiment_data)
 
-        if st.button("Submit Application"):
+    fig = px.bar(
+        df,
+        x="Sector",
+        y="Sentiment",
+        title="Market Sentiment Score"
+    )
 
-            gid = int(grants[grants.title==selected].id.values[0])
+    st.plotly_chart(fig)
 
-            score = ai_score(proposal)
+# -------------------------------
+# PORTFOLIO TRACKER
+# -------------------------------
 
-            c.execute(
-                "INSERT INTO applications VALUES(NULL,?,?,?,?,?,?)",
-                (gid,name,github,proposal,score,"submitted")
-            )
+elif page == "Portfolio Tracker":
 
-            conn.commit()
+    st.header("Investment Portfolio")
 
-            st.success(f"Submitted | AI Score: {score}")
+    ticker = st.text_input("Ticker")
 
+    amount = st.number_input("Investment Amount")
 
-# ======================================================
-# REVIEW
-# ======================================================
+    if st.button("Add Investment"):
 
-if page == "Review":
+        st.success(f"Added {ticker} investment worth ${amount}")
 
-    st.header("Grant Review Console")
+# -------------------------------
+# PREMIUM TOOLS
+# -------------------------------
 
-    apps = load_apps()
+elif page == "Premium Tools":
 
-    if len(apps)==0:
-        st.info("No applications")
+    st.header("Premium Investor Tools")
 
-    for _,row in apps.iterrows():
+    st.warning("Upgrade to unlock premium analytics.")
 
-        st.subheader(row['applicant'])
-        st.write("GitHub:",row['github'])
-        st.write("Score:",row['score'])
-        st.write("Status:",row['status'])
+    st.write("🔒 Hedge Fund Signals")
+    st.write("🔒 Institutional Flow Data")
+    st.write("🔒 AI Trading Signals")
+    st.write("🔒 Quantitative Risk Analysis")
 
-        col1,col2 = st.columns(2)
+    if st.button("Upgrade to Pro"):
 
-        if col1.button(f"Approve {row['id']}"):
-
-            c.execute(
-                "UPDATE applications SET status='approved' WHERE id=?",
-                (row['id'],)
-            )
-
-            conn.commit()
-
-            st.rerun()
-
-        if col2.button(f"Reject {row['id']}"):
-
-            c.execute(
-                "UPDATE applications SET status='rejected' WHERE id=?",
-                (row['id'],)
-            )
-
-            conn.commit()
-
-            st.rerun()
-
-        st.divider()
-
-
-# ======================================================
-# GRANT INTELLIGENCE PAGE
-# ======================================================
-
-if page == "Grant Intelligence":
-
-    st.header("Grant Intelligence Engine")
-
-    grant_intelligence()
-
-
-# ======================================================
-# AI COMMAND CONSOLE PAGE
-# ======================================================
-
-if page == "AI Command Console":
-
-    ai_console()
-
+        st.success("Redirecting to subscription system...")
