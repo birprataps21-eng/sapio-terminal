@@ -2,101 +2,95 @@ import streamlit as st
 import pandas as pd
 import random
 import time
+import requests # NEW: For pulling live data from the web
 from datetime import datetime
 
-# --- 1. THE BRAIN (Persistent Data without a Database) ---
-# We use st.cache_resource to keep the revenue alive even if the page refreshes.
+# --- 1. LIVE DATA ENGINE (The Real Stuff) ---
+def get_crypto_prices():
+    try:
+        # Fetching real prices for XRP and NEAR
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=ripple,near,bitcoin&vs_currencies=usd&include_24hr_change=true"
+        response = requests.get(url).json()
+        return response
+    except:
+        # Fallback if the API is busy
+        return None
+
+# --- 2. THE BRAIN (Treasury) ---
 @st.cache_resource
 def get_global_treasury():
-    return {"revenue": 1240.50, "missions": 412} # Starting 'Seed' data
+    return {"revenue": 1240.50, "missions": 412}
 
 treasury = get_global_treasury()
 
-# --- 2. PAGE CONFIG ---
-st.set_page_config(page_title="Sapio Intelligence | Global", page_icon="⚡", layout="wide")
+# --- 3. PAGE CONFIG ---
+st.set_page_config(page_title="Sapio Intelligence | v8.0", page_icon="⚡", layout="wide")
 
-# --- 3. SESSION STATE ---
+# --- 4. SESSION STATE ---
+if 'wallet_address' not in st.session_state:
+    st.session_state.wallet_address = None
 if 'total_revenue' not in st.session_state:
     st.session_state.total_revenue = treasury["revenue"]
-if 'missions_completed' not in st.session_state:
-    st.session_state.missions_completed = treasury["missions"]
 
-# --- 4. DATA FEED ---
-def get_live_data():
-    return {
-        "gdp_val": f"${round(random.uniform(6.5, 6.8), 2)}B",
-        "movers": [
-            {"Project": "LiquidX (XRPL)", "Volume": "$142M", "Trend": "🚀 High"},
-            {"Project": "NearScribe AI", "Volume": "$54M", "Trend": "📈 Steady"},
-            {"Project": "Sapio Oracle", "Volume": "$18M", "Trend": "🔥 New"}
-        ],
-        "news": ["SYSTEM: Cloud Sync Active", "XRPL: x402 Node Online", "NEAR: AI Compute Demand Spike"]
-    }
+# --- 5. LIVE MARKET HEADER ---
+prices = get_crypto_prices()
+if prices:
+    p_xrp = prices['ripple']['usd']
+    c_xrp = prices['ripple']['usd_24h_change']
+    p_near = prices['near']['usd']
+    c_near = prices['near']['usd_24h_change']
+    
+    st.markdown(f"""
+        <div style="display: flex; gap: 20px; background: #1a1c24; padding: 10px; border-radius: 5px; border-left: 5px solid #00ffcc;">
+            <span style="color: white;"><b>LIVE MARKET:</b></span>
+            <span style="color: #00ffcc;">XRP: ${p_xrp} ({round(c_xrp, 2)}%)</span>
+            <span style="color: #00ffcc;">NEAR: ${p_near} ({round(c_near, 2)}%)</span>
+        </div>
+    """, unsafe_allow_html=True)
 
-data = get_live_data()
-
-# --- 5. SIDEBAR ---
+# --- 6. SIDEBAR & WALLET ---
 with st.sidebar:
-    st.image("https://img.icons8.com/ios-filled/100/ffffff/radar.png", width=60)
     st.title("Sapio Command")
-    st.success("✓ CLOUD STATUS: LIVE")
+    if not st.session_state.wallet_address:
+        if st.button("🔗 Connect Wallet", use_container_width=True):
+            st.session_state.wallet_address = f"r{random.randint(1000, 9999)}...xP"
+            st.rerun()
+    else:
+        st.success(f"Connected: {st.session_state.wallet_address}")
+    
     st.divider()
-    st.markdown("### 🏦 Global Treasury")
-    st.metric("Total Revenue", f"${round(st.session_state.total_revenue, 2)}", f"+{st.session_state.missions_completed} missions")
-    st.divider()
-    st.info("Agentic GDP is scaling. Missions authorized for XRPL/NEAR.")
+    st.metric("Total Platform Revenue", f"${round(st.session_state.total_revenue, 2)}")
 
-# --- 6. MAIN UI ---
+# --- 7. MAIN DASHBOARD ---
 st.title("🌐 Sapio Intelligence Terminal")
-st.markdown("### `Production Tier: GLOBAL HOSTING READY`")
 
-# TICKER
-news_string = " • ".join(data["news"])
-st.markdown(f"""
-    <div style="background-color: #0e1117; padding: 12px; border-radius: 10px; border: 2px solid #00ffcc;">
-        <marquee style="color: #00ffcc; font-family: 'Courier New'; font-weight: bold;">
-            [LIVE ALPHA FEED] • {news_string} • Platform Revenue: ${round(st.session_state.total_revenue, 2)}
-        </marquee>
-    </div>
-""", unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.subheader("🤖 Agent Status")
+    st.write("● Alpha-1: **Scanning Nodes**")
+    st.write("● Whale-Bot: **Monitoring Pools**")
 
-# METRICS
-st.write("")
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("Agentic GDP", data["gdp_val"], "+14.2%")
-m2.metric("Missions Run", st.session_state.missions_completed, "Global")
-m3.metric("Platform Fee", "0.15%", "Fixed")
-m4.metric("AI Confidence", "98.4%", "Optimal")
+with col2:
+    st.subheader("⚡ Intent Solver")
+    mission = st.text_input("Define Mission", placeholder="Harvest yield...", disabled=not st.session_state.wallet_address)
+    if st.button("🚀 Execute", disabled=not st.session_state.wallet_address):
+        with st.status("Solving..."):
+            time.sleep(1)
+            fee = round(random.uniform(0.10, 0.95), 2)
+            st.session_state.total_revenue += fee
+            treasury["revenue"] = st.session_state.total_revenue
+        st.success(f"Mission Success! Fee: ${fee}")
 
-# --- 7. COMMAND CENTER ---
+with col3:
+    st.subheader("📊 Network Health")
+    st.progress(98, text="XRPL Node Sync")
+    st.progress(85, text="NEAR Shard Load")
+
+# --- 8. REAL-TIME CHART ---
 st.divider()
-col_left, col_right = st.columns([2, 1])
+st.subheader("💹 Market Intelligence")
+# This creates a dummy chart that looks real for the dashboard
+chart_data = pd.DataFrame(random.sample(range(60, 100), 10), columns=['Price'])
+st.area_chart(chart_data, color="#00ffcc")
 
-with col_left:
-    st.subheader("⚡ Deploy Autonomous Intent")
-    with st.container(border=True):
-        mission = st.text_input("Define Mission", placeholder="e.g. 'Optimize XRPL liquidity for 12% APY'")
-        if st.button("🚀 Execute on Cloud"):
-            with st.status("Deploying to Sapio Cloud Nodes..."):
-                time.sleep(1.5)
-                fee = round(random.uniform(0.10, 0.95), 2)
-                st.session_state.total_revenue += fee
-                st.session_state.missions_completed += 1
-                # Update the 'Global' cache
-                treasury["revenue"] = st.session_state.total_revenue
-                treasury["missions"] = st.session_state.missions_completed
-            st.success(f"Mission Signed. Fee Collected: ${fee}")
-            st.balloons()
-
-with col_right:
-    st.subheader("🏆 Leaderboard")
-    st.table(pd.DataFrame([
-        {"Agent": "Alpha-1", "Profit": "$412.50"},
-        {"Agent": "Whale-Bot", "Profit": "$389.20"},
-        {"Agent": "Sapio-Yield", "Profit": "$210.10"}
-    ]))
-
-# --- 8. MOVERS ---
-st.divider()
-st.subheader("🚀 Top Moving Projects")
-st.dataframe(pd.DataFrame(data["movers"]), hide_index=True, use_container_width=True)
+st.caption(f"v8.0 Advanced Terminal | Last Sync: {datetime.now().strftime('%H:%M:%S')}")
