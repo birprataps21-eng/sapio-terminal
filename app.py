@@ -5,131 +5,111 @@ import time
 import requests
 from datetime import datetime
 
-# --- 1. INSTITUTIONAL UI ENGINE ---
-st.set_page_config(page_title="Sapio Sovereign Terminal", page_icon="🏦", layout="wide")
+# --- 1. GLOBAL UI & THEME ---
+st.set_page_config(page_title="Sapio Sovereign | ISO 20022", page_icon="🏦", layout="wide")
 
 st.markdown("""
     <style>
-    /* Dark Room Aesthetic */
-    .stApp { background-color: #020406; color: #94a3b8; font-family: 'Inter', sans-serif; }
+    /* Dark Institutional Base */
+    .stApp { background-color: #05070a; color: #e2e8f0; }
     
-    /* Quadrant Tiles */
-    [data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
-        background: #0a0f16;
-        border: 1px solid #1e293b;
-        border-radius: 2px; /* Sharp corners for professional look */
+    /* Side-by-Side Card Styling */
+    div[data-testid="column"] {
+        background: #0d1117;
+        border: 1px solid #1f2937;
         padding: 20px;
-        min-height: 380px;
+        border-radius: 8px;
     }
-
-    /* Professional Metric Typography */
-    [data-testid="stMetricValue"] { color: #f8fafc !important; font-family: 'JetBrains Mono', monospace; font-size: 1.6rem !important; font-weight: 700; }
-    [data-testid="stMetricDelta"] { font-size: 0.85rem !important; }
-
-    /* ISO 20022 Badge */
-    .iso-status {
+    
+    /* Heavyweight Metric Glow */
+    [data-testid="stMetricValue"] { color: #00ffcc !important; font-family: 'JetBrains Mono', monospace; font-size: 1.8rem !important; }
+    
+    /* ISO 20022 Status Bar */
+    .iso-banner {
+        background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid #00ffcc;
         color: #00ffcc;
-        border: 1px solid #00ffcc;
-        padding: 4px 10px;
-        font-size: 10px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-    }
-
-    /* Terminal Action Buttons */
-    .stButton>button {
-        background: transparent;
-        color: #00ffcc !important;
-        border: 1px solid #00ffcc;
-        border-radius: 0px;
-        font-size: 12px;
+        padding: 10px;
+        text-align: center;
         font-weight: bold;
-        transition: all 0.2s;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
     }
-    .stButton>button:hover { background: #00ffcc; color: #020406 !important; box-shadow: 0 0 15px #00ffcc55; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. THE CORE PROTOCOL (Zero-Base) ---
+# --- 2. THE REAL-TIME ENGINE ---
 @st.cache_resource
-def get_global_metrics():
-    # GDP and Revenue start at real base levels
-    return {"gdp": 6.57, "rev": 0.000, "hist": [6.50, 6.52, 6.55, 6.57]}
+def init_protocol():
+    return {"gdp": 6.57, "rev": 0.00, "history": [6.50, 6.52, 6.55, 6.57]}
 
-data = get_global_metrics()
+def get_live_market():
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=ripple,near,bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true"
+        return requests.get(url).json()
+    except: return None
 
-# --- 3. TOP LEVEL: GLOBAL RECOGNITION BAR ---
-h_left, h_mid, h_right = st.columns([2, 3, 2])
-with h_left:
-    st.markdown("<h2 style='margin:0; color:white;'>SAPIO <span style='color:#00ffcc; font-size:15px;'>SOVEREIGN v15.0</span></h2>", unsafe_allow_html=True)
-with h_mid:
-    # ISO 20022 Ticker
-    st.markdown("<div style='text-align:center; padding-top:10px;'><span class='iso-status'>ISO 20022 COMPLIANT • PACS.008 ENABLED • SWIFT-XML BRIDGED</span></div>", unsafe_allow_html=True)
-with h_right:
-    st.markdown(f"<div style='text-align:right; color:#475569;'>SYSTEM TIME: {datetime.now().strftime('%H:%M:%S UTC')}</div>", unsafe_allow_html=True)
+state = init_protocol()
+prices = get_live_market()
 
-st.divider()
-
-# --- 4. THE 4-QUADRANT GRID ---
-# ROW 1
-top_l, top_r = st.columns(2)
-
-with top_l:
-    st.markdown("### 📊 AGENTIC GDP TRACKER")
-    c1, c2 = st.columns(2)
-    c1.metric("Current Agentic GDP", f"${data['gdp']}B", "+0.02B")
-    c2.metric("Projected Q4", "$7.12B", "Target")
-    st.area_chart(data['hist'], color="#00ffcc", height=180)
-
-with top_r:
-    st.markdown("### 🏦 REVENUE PIPELINE")
-    r1, r2 = st.columns(2)
-    r1.metric("Total Platform Revenue", f"${round(data['rev'], 4)}", "REAL-TIME")
-    r2.metric("Active Yield Nodes", "142", "Global")
+# --- 3. THE "CONTROL TOWER" SIDEBAR ---
+with st.sidebar:
+    st.title("⚡ SAPIO CORE")
+    st.markdown("---")
+    st.subheader("🏦 GLOBAL TREASURY")
+    st.metric("REAL REVENUE", f"${round(state['rev'], 4)}")
+    st.metric("AGENTIC GDP", f"${state['gdp']}B", "+0.02")
     
-    st.divider()
-    st.markdown("#### ⚡ DEPLOY INTENT")
-    intent = st.text_input("Protocol Command", placeholder="Sweep liquidity...", label_visibility="collapsed")
-    if st.button("EXECUTE ON-CHAIN"):
-        with st.status("Solving via Rust Kernel..."):
-            time.sleep(1)
-            data['rev'] += 0.0025
-            data['gdp'] += 0.01
-            data['hist'].append(data['gdp'])
-        st.rerun()
-
-# ROW 2
-bot_l, bot_r = st.columns(2)
-
-with bot_l:
-    st.markdown("### 💹 MARKET INTELLIGENCE")
-    # Real prices fetch simulation to avoid lag
-    m_col1, m_col2, m_col3 = st.columns(3)
-    m_col1.metric("XRP/USD", "$0.6214", "+1.2%")
-    m_col2.metric("NEAR/USD", "$6.42", "-0.4%")
-    m_col3.metric("BTC/USD", "$68,412", "+2.1%")
-    
-    st.divider()
-    st.caption("NETWORK LATENCY: 14ms | SETTLEMENT: INSTANT | SECURITY: RSA-4096")
-    st.progress(98, text="Node Sync Progress")
-
-with bot_r:
-    st.markdown("### 🔐 INSTITUTIONAL ACCESS")
+    st.markdown("---")
+    st.subheader("🔐 AUTHENTICATION")
     if 'auth' not in st.session_state: st.session_state.auth = False
-    
     if not st.session_state.auth:
-        st.warning("AUTHENTICATION REQUIRED")
-        if st.button("CONNECT CORPORATE HSM"):
+        if st.button("CONNECT HSM WALLET", use_container_width=True):
             st.session_state.auth = True
             st.rerun()
     else:
-        st.success("SESSION ACTIVE: SAPIO-ADMIN-01")
-        st.table(pd.DataFrame([
-            {"Region": "London", "Status": "Active", "Load": "14%"},
-            {"Region": "Singapore", "Status": "Active", "Load": "22%"},
-            {"Region": "NY", "Status": "Syncing", "Load": "91%"}
-        ]))
+        st.success("SESSION: SECURE")
+        if st.button("DISCONNECT", use_container_width=True):
+            st.session_state.auth = False
+            st.rerun()
 
-# --- 5. FOOTER ---
+# --- 4. MAIN TERMINAL BODY ---
+st.markdown('<div class="iso-banner">ISO 20022 COMPLIANT | PACS.008 REAL-TIME SETTLEMENT | AGENTIC ECONOMY ACTIVE</div>', unsafe_allow_html=True)
+
+# TOP ROW: MARKET & COMPLIANCE
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.subheader("💹 Market Feed")
+    if prices:
+        st.write(f"● XRP: **${prices['ripple']['usd']}** ({round(prices['ripple']['usd_24h_change'], 2)}%)")
+        st.write(f"● NEAR: **${prices['near']['usd']}** ({round(prices['near']['usd_24h_change'], 2)}%)")
+        st.write(f"● BTC: **${prices['bitcoin']['usd']}** ({round(prices['bitcoin']['usd_24h_change'], 2)}%)")
+    else:
+        st.error("Market API Offline")
+
+with col2:
+    st.subheader("📈 GDP Momentum")
+    st.line_chart(state['history'], color="#00ffcc", height=150)
+
+with col3:
+    st.subheader("🛰️ Infra Status")
+    st.caption("🟢 LONDON (HQ): ACTIVE")
+    st.caption("🟢 SINGAPORE: ACTIVE")
+    st.caption("🟢 TOKYO: ACTIVE")
+    st.progress(98, text="Node Sync")
+
+# BOTTOM ROW: THE MISSION COMMAND
+st.markdown("### ⚡ DEPLOY AUTONOMOUS INTENT")
+with st.container():
+    cmd = st.text_input("Enter Protocol Mission", placeholder="e.g. Optimize cross-chain liquidity...", label_visibility="collapsed", disabled=not st.session_state.auth)
+    if st.button("EXECUTE ON-CHAIN", use_container_width=True, disabled=not st.session_state.auth):
+        with st.status("Solving via Sapio Rust Kernel..."):
+            time.sleep(1)
+            state['rev'] += 0.0025
+            state['gdp'] += 0.01
+            state['history'].append(state['gdp'])
+        st.success(f"Mission Settled. Revenue Captured.")
+        st.rerun()
+
 st.markdown("---")
-st.caption("PROPRIETARY TECHNOLOGY. ISO 20022 STANDARDIZED DATA FORMATS ONLY.")
+st.caption(f"SAPIO SOVEREIGN v16.0 | SYSTEM TIME: {datetime.now().strftime('%H:%M:%S UTC')}")
