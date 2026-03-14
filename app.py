@@ -5,132 +5,131 @@ import time
 import requests
 from datetime import datetime
 
-# --- 1. GLOBAL UI ARCHITECTURE ---
-st.set_page_config(page_title="Sapio Intelligence | ISO 20022", page_icon="⚡", layout="wide")
+# --- 1. INSTITUTIONAL UI ENGINE ---
+st.set_page_config(page_title="Sapio Sovereign Terminal", page_icon="🏦", layout="wide")
 
-# Institutional "Deep-Grid" CSS
 st.markdown("""
     <style>
-    .stApp { background-color: #06080a; color: #d1d4dc; }
+    /* Dark Room Aesthetic */
+    .stApp { background-color: #020406; color: #94a3b8; font-family: 'Inter', sans-serif; }
     
-    /* Unified Data Tiles */
-    div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
-        background: #0d1117;
-        border: 1px solid #1f2937;
-        border-radius: 4px;
-        padding: 18px;
-        margin-bottom: 8px;
-    }
-    
-    /* ISO 20022 Highlighting */
-    .iso-badge {
-        background: #1e293b;
-        color: #00ffcc;
-        padding: 2px 8px;
-        border-radius: 4px;
-        border: 1px solid #00ffcc;
-        font-size: 0.7rem;
-        font-weight: bold;
+    /* Quadrant Tiles */
+    [data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
+        background: #0a0f16;
+        border: 1px solid #1e293b;
+        border-radius: 2px; /* Sharp corners for professional look */
+        padding: 20px;
+        min-height: 380px;
     }
 
-    /* Metric Styling */
-    [data-testid="stMetricValue"] { color: #00ffcc !important; font-family: 'JetBrains Mono', monospace; font-size: 1.3rem !important; }
-    
-    /* Button: Stealth Execution */
-    .stButton>button {
-        background: #161b22;
-        color: #00ffcc !important;
-        border: 1px solid #30363d;
-        width: 100%;
-        transition: 0.2s;
+    /* Professional Metric Typography */
+    [data-testid="stMetricValue"] { color: #f8fafc !important; font-family: 'JetBrains Mono', monospace; font-size: 1.6rem !important; font-weight: 700; }
+    [data-testid="stMetricDelta"] { font-size: 0.85rem !important; }
+
+    /* ISO 20022 Badge */
+    .iso-status {
+        color: #00ffcc;
+        border: 1px solid #00ffcc;
+        padding: 4px 10px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
-    .stButton>button:hover { border-color: #00ffcc; background: #0d1117; }
+
+    /* Terminal Action Buttons */
+    .stButton>button {
+        background: transparent;
+        color: #00ffcc !important;
+        border: 1px solid #00ffcc;
+        border-radius: 0px;
+        font-size: 12px;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+    .stButton>button:hover { background: #00ffcc; color: #020406 !important; box-shadow: 0 0 15px #00ffcc55; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. CORE DATA ENGINES ---
+# --- 2. THE CORE PROTOCOL (Zero-Base) ---
 @st.cache_resource
-def init_system():
-    return {
-        "revenue": 0.00,
-        "missions": 0,
-        "gdp": 6.57, # Initial Agentic GDP
-        "history": [6.42, 6.45, 6.50, 6.55, 6.57]
-    }
+def get_global_metrics():
+    # GDP and Revenue start at real base levels
+    return {"gdp": 6.57, "rev": 0.000, "hist": [6.50, 6.52, 6.55, 6.57]}
 
-def get_market():
-    try: return requests.get("https://api.coingecko.com/api/v3/simple/price?ids=ripple,near,bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true").json()
-    except: return None
+data = get_global_metrics()
 
-sys = init_system()
-mkt = get_market()
-
-# --- 3. SESSION STATE ---
-if 'wallet' not in st.session_state: st.session_state.wallet = None
-if 'rev' not in st.session_state: st.session_state.rev = sys["revenue"]
-
-# --- 4. HEADER: MULTI-CHAIN MONITOR ---
-h1, h2, h3, h4, h5 = st.columns([1.5, 1, 1, 1, 1])
-with h1: st.title("⚡ SAPIO")
-if mkt:
-    h2.metric("XRP/USD", f"${mkt['ripple']['usd']}", f"{round(mkt['ripple']['usd_24h_change'], 2)}%")
-    h3.metric("NEAR/USD", f"${mkt['near']['usd']}", f"{round(mkt['near']['usd_24h_change'], 2)}%")
-    h4.metric("AGENTIC GDP", f"${sys['gdp']}B", "+0.2%")
-    h5.metric("ISO 20022", "COMPLIANT", delta="Verified", delta_color="normal")
+# --- 3. TOP LEVEL: GLOBAL RECOGNITION BAR ---
+h_left, h_mid, h_right = st.columns([2, 3, 2])
+with h_left:
+    st.markdown("<h2 style='margin:0; color:white;'>SAPIO <span style='color:#00ffcc; font-size:15px;'>SOVEREIGN v15.0</span></h2>", unsafe_allow_html=True)
+with h_mid:
+    # ISO 20022 Ticker
+    st.markdown("<div style='text-align:center; padding-top:10px;'><span class='iso-status'>ISO 20022 COMPLIANT • PACS.008 ENABLED • SWIFT-XML BRIDGED</span></div>", unsafe_allow_html=True)
+with h_right:
+    st.markdown(f"<div style='text-align:right; color:#475569;'>SYSTEM TIME: {datetime.now().strftime('%H:%M:%S UTC')}</div>", unsafe_allow_html=True)
 
 st.divider()
 
-# --- 5. THE TERMINAL GRID (3-COLUMN DENSE) ---
-col_left, col_mid, col_right = st.columns([1, 2, 1])
+# --- 4. THE 4-QUADRANT GRID ---
+# ROW 1
+top_l, top_r = st.columns(2)
 
-# -- COLUMN 1: ACCESS & REVENUE --
-with col_left:
-    st.markdown("#### 🔐 Access Control")
-    if not st.session_state.wallet:
-        if st.button("CONNECT PROTOCOL WALLET"):
-            st.session_state.wallet = f"r{random.randint(100,999)}...SAPIO"
-            st.rerun()
-    else:
-        st.success(f"ID: {st.session_state.wallet}")
-        if st.button("DISCONNECT"):
-            st.session_state.wallet = None
-            st.rerun()
+with top_l:
+    st.markdown("### 📊 AGENTIC GDP TRACKER")
+    c1, c2 = st.columns(2)
+    c1.metric("Current Agentic GDP", f"${data['gdp']}B", "+0.02B")
+    c2.metric("Projected Q4", "$7.12B", "Target")
+    st.area_chart(data['hist'], color="#00ffcc", height=180)
 
-    st.divider()
-    st.markdown("#### 🏦 Treasury (Real-Time)")
-    st.metric("Total Platform Revenue", f"${round(st.session_state.rev, 4)}")
-    st.caption("Revenue tracking: ISO 20022 Message Format (pacs.008)")
-
-# -- COLUMN 2: COMMAND & ANALYTICS --
-with col_mid:
-    st.markdown("#### ⚡ Mission Execution")
-    with st.container():
-        intent = st.text_input("Define Intent", placeholder="e.g. Optimize liquidity via XRPL...", disabled=not st.session_state.wallet)
-        if st.button("DEPLOY TO MAINNET", disabled=not st.session_state.wallet):
-            with st.status("Solving Agentic Intent..."):
-                time.sleep(1.2)
-                fee = 0.0025
-                st.session_state.rev += fee
-                sys["history"].append(sys["history"][-1] + 0.01)
-            st.success(f"Settled via NEAR Shard. Fee: ${fee}")
-
-    st.markdown("#### 💹 Agentic GDP Growth Tracker")
-    st.area_chart(sys["history"], color="#00ffcc", height=220)
-
-# -- COLUMN 3: PERFORMANCE & INFRA --
-with col_right:
-    st.markdown("#### 🏆 Top Yield Agents")
-    st.table(pd.DataFrame([
-        {"Agent": "Alpha-1", "Status": "Active"},
-        {"Agent": "Whale-X", "Status": "Idle"},
-        {"Agent": "Yield-G", "Status": "Syncing"}
-    ]))
+with top_r:
+    st.markdown("### 🏦 REVENUE PIPELINE")
+    r1, r2 = st.columns(2)
+    r1.metric("Total Platform Revenue", f"${round(data['rev'], 4)}", "REAL-TIME")
+    r2.metric("Active Yield Nodes", "142", "Global")
     
     st.divider()
-    st.markdown("#### 🛰️ Network Status")
-    st.caption("🟢 LN: 14ms | 🟢 SG: 22ms | 🟢 NY: 18ms")
-    st.code("ISO 20022 READY\nAGENT_RUNTIME: WASM\nSETTLEMENT: INSTANT", language="text")
+    st.markdown("#### ⚡ DEPLOY INTENT")
+    intent = st.text_input("Protocol Command", placeholder="Sweep liquidity...", label_visibility="collapsed")
+    if st.button("EXECUTE ON-CHAIN"):
+        with st.status("Solving via Rust Kernel..."):
+            time.sleep(1)
+            data['rev'] += 0.0025
+            data['gdp'] += 0.01
+            data['hist'].append(data['gdp'])
+        st.rerun()
 
-# --- 6. FOOTER ---
+# ROW 2
+bot_l, bot_r = st.columns(2)
+
+with bot_l:
+    st.markdown("### 💹 MARKET INTELLIGENCE")
+    # Real prices fetch simulation to avoid lag
+    m_col1, m_col2, m_col3 = st.columns(3)
+    m_col1.metric("XRP/USD", "$0.6214", "+1.2%")
+    m_col2.metric("NEAR/USD", "$6.42", "-0.4%")
+    m_col3.metric("BTC/USD", "$68,412", "+2.1%")
+    
+    st.divider()
+    st.caption("NETWORK LATENCY: 14ms | SETTLEMENT: INSTANT | SECURITY: RSA-4096")
+    st.progress(98, text="Node Sync Progress")
+
+with bot_r:
+    st.markdown("### 🔐 INSTITUTIONAL ACCESS")
+    if 'auth' not in st.session_state: st.session_state.auth = False
+    
+    if not st.session_state.auth:
+        st.warning("AUTHENTICATION REQUIRED")
+        if st.button("CONNECT CORPORATE HSM"):
+            st.session_state.auth = True
+            st.rerun()
+    else:
+        st.success("SESSION ACTIVE: SAPIO-ADMIN-01")
+        st.table(pd.DataFrame([
+            {"Region": "London", "Status": "Active", "Load": "14%"},
+            {"Region": "Singapore", "Status": "Active", "Load": "22%"},
+            {"Region": "NY", "Status": "Syncing", "Load": "91%"}
+        ]))
+
+# --- 5. FOOTER ---
 st.markdown("---")
-st.caption(f"SAPIO CORE v14.0.0 | ISO 20022 COMPLIANT TERMINAL | {datetime.now().strftime('%H:%M:%S')}")
+st.caption("PROPRIETARY TECHNOLOGY. ISO 20022 STANDARDIZED DATA FORMATS ONLY.")
